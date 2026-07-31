@@ -51,7 +51,7 @@ body.center-beat .scrim-text{background:radial-gradient(ellipse 60% 70% at 50% 5
 .hud .meta{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
 
 .beats{position:fixed;inset:0;z-index:12;pointer-events:none}
-.beat{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(22px,7vw,120px);opacity:0;will-change:opacity,transform}
+.beat{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 max(clamp(22px,7vw,90px),calc((100% - 1440px)/2));opacity:0;will-change:opacity,transform}
 .beat.center{align-items:center;text-align:center;padding:0 24px}
 .eyebrow{font-size:clamp(10px,1.15vw,12.5px);letter-spacing:.34em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;text-shadow:0 2px 24px rgba(3,4,10,.95)}
 .beat h1{font-family:var(--serif);font-weight:700;line-height:.96;font-size:clamp(3.2rem,10vw,9rem);letter-spacing:-.01em;text-wrap:balance;max-width:13ch;text-shadow:0 2px 60px rgba(3,4,10,.9)}
@@ -82,6 +82,13 @@ body.center-beat .scrim-text{background:radial-gradient(ellipse 60% 70% at 50% 5
 .pre-count{font-family:var(--serif);font-size:clamp(52px,14vw,120px);line-height:.9;color:var(--accent);font-variant-numeric:tabular-nums}
 .pre-count i{font-style:normal;color:var(--muted);font-size:.26em;letter-spacing:.1em;vertical-align:super}
 .pre-label{font:600 10px/1 var(--sans);letter-spacing:.4em;text-transform:uppercase;color:var(--muted)}
+@media(min-width:1700px){
+  .beat h1{font-size:9.5rem}.beat h2{font-size:6.4rem}
+  .beat p{font-size:22px;max-width:50ch}
+  .hero .wrap{max-width:1440px}
+  .facehero{width:50%}
+}
+@media(min-width:2300px){.beat h1{font-size:11rem}.beat h2{font-size:7.4rem}.beat p{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.cursor-glow,.scroll-cue i{display:none}}
 </style>
 </head>
