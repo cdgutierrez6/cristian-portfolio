@@ -27,12 +27,12 @@ body.loading{overflow:hidden;height:100vh}
 
 .bg-base{position:fixed;inset:0;z-index:0;background:radial-gradient(125% 95% at 50% 30%,#0c1226 0%,var(--bg) 46%,var(--bg2) 100%)}
 .bg-glow{position:fixed;left:50%;top:44%;width:110vmax;height:110vmax;z-index:0;transform:translate(-50%,-50%);pointer-events:none;will-change:transform,background;
-  background:radial-gradient(circle at center,rgba(var(--glow),.15) 0%,rgba(var(--glow),.05) 32%,transparent 62%)}
-.clip{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;mix-blend-mode:screen;pointer-events:none;opacity:0;will-change:opacity,transform;
-  -webkit-mask-image:radial-gradient(125% 120% at 50% 44%,#000 46%,rgba(0,0,0,.4) 73%,transparent 100%);
-  mask-image:radial-gradient(125% 120% at 50% 44%,#000 46%,rgba(0,0,0,.4) 73%,transparent 100%)}
-.smoke{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;mix-blend-mode:screen;pointer-events:none;opacity:0;will-change:opacity,transform}
-.vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at 50% 42%,transparent 46%,rgba(3,4,10,.4) 82%,rgba(2,3,7,.92) 100%)}
+  background:radial-gradient(circle at center,rgba(var(--glow),.22) 0%,rgba(var(--glow),.07) 32%,transparent 62%)}
+.clip{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;mix-blend-mode:screen;pointer-events:none;opacity:0;will-change:opacity,transform;filter:brightness(1.65) contrast(1.1) saturate(1.28);
+  -webkit-mask-image:radial-gradient(145% 135% at 50% 44%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%);
+  mask-image:radial-gradient(145% 135% at 50% 44%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%)}
+.smoke{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;mix-blend-mode:screen;pointer-events:none;opacity:0;will-change:opacity,transform;filter:brightness(1.45) saturate(1.2)}
+.vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at 50% 42%,transparent 55%,rgba(3,4,10,.3) 85%,rgba(2,3,7,.9) 100%)}
 .grain{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-repeat:repeat;background-size:150px 150px}
 .cursor-glow{position:fixed;left:0;top:0;width:340px;height:340px;z-index:4;margin:-170px 0 0 -170px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .4s;will-change:transform;
   background:radial-gradient(circle at center,rgba(var(--glow),.16),transparent 65%);mix-blend-mode:screen}
@@ -156,7 +156,7 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 const VIDS={neural:$('#vNeural'),streams:$('#vStreams'),core:$('#vCore'),nebula:$('#vNebula')};
 const CURTAIN=$('#vCurtain');
 const BEATS=[
-  {v:'neural', glow:[127,178,255]},
+  {v:'core',   glow:[127,178,255]},
   {v:'streams',glow:[95,208,230]},
   {v:'neural', glow:[140,150,255]},
   {v:'core',   glow:[120,180,255]},
@@ -164,7 +164,17 @@ const BEATS=[
   {v:'nebula', glow:[150,170,255]},
 ];
 const N=BEATS.length,beatEls=$$('.beat');
-[CURTAIN,...Object.values(VIDS)].forEach(v=>{v.play&&v.play().catch(()=>{});});
+const ALLV=[CURTAIN,...Object.values(VIDS)];
+// al cargar cada clip, saltar a un frame con contenido (los clips arrancan en negro)
+ALLV.forEach(v=>v.addEventListener('loadeddata',()=>{if(v.currentTime<0.05){try{v.currentTime=1.6;}catch(e){}}},{once:true}));
+// Chrome limita videos concurrentes → solo reproducimos los necesarios; el resto en pausa.
+function manageVideos(need){ALLV.forEach(v=>{if(need.has(v)){
+  if(v.readyState>=1&&v.currentTime<0.05){try{v.currentTime=1.5;}catch(e){}}  // frame con contenido aunque el autoplay tarde
+  if(v.paused)v.play().catch(()=>{});
+}else if(!v.paused){v.pause();}});}
+// nota: el bucle de render llama manageVideos() cada frame → reintenta play() y se
+// auto-reproduce en cuanto la pestaña está activa o hay un gesto (scroll).
+manageVideos(new Set([VIDS[BEATS[0].v],CURTAIN]));
 
 const bgGlow=$('#bgGlow'),cursorGlow=$('#cursorGlow'),pct=$('#pct'),root=document.documentElement,progress=$('#progress');
 let targetScroll=0,smoothScroll=0,mx=innerWidth/2,my=innerHeight/2,px=mx,py=my,pointer=false;
@@ -183,6 +193,7 @@ function render(){
   if(seg>=N-1||local<HOLD){aI=seg;bI=seg;cb=0;tt=0;inTrans=false;}
   else{tt=(local-HOLD)/(1-HOLD);aI=seg;bI=seg+1;cb=tt;inTrans=true;}
   const vA=VIDS[BEATS[aI].v],vB=VIDS[BEATS[bI].v];
+  manageVideos(new Set([vA,vB,CURTAIN]));
   const nx=(px/W-0.5),ny=(py/H-0.5),now=performance.now()/1000;
 
   const gA=BEATS[aI].glow,gB=BEATS[bI].glow;for(let c=0;c<3;c++)curGlow[c]=lerp(gA[c],gB[c],cb);
